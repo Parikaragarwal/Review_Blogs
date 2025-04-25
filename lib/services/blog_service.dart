@@ -85,12 +85,78 @@ class BlogService {
     }
   }
 
-  Future<bool> deleteBlog(String id) async {
+  Future<bool> deleteBlog(String blogId, String userId) async {
     try {
-      await _storageService.deleteBlog(id);
+      print('BlogService: Attempting to delete blog $blogId by user $userId'); // Debug log
+      
+      // Get all blogs
+      final blogs = await _storageService.getBlogs();
+      final blogIndex = blogs.indexWhere((blog) => blog.id == blogId);
+      
+      if (blogIndex == -1) {
+        print('BlogService: Blog not found'); // Debug log
+        return false;
+      }
+
+      // Check if the user is the author of the blog
+      if (blogs[blogIndex].authorId != userId) {
+        print('BlogService: User is not the author'); // Debug log
+        return false;
+      }
+
+      // Delete the blog's image if it exists
+      if (blogs[blogIndex].imagePath != null) {
+        await _storageService.deleteImage(blogs[blogIndex].imagePath!);
+      }
+
+      // Delete all comments associated with this blog
+      final comments = await _storageService.getComments();
+      final blogComments = comments.where((comment) => comment.blogId == blogId).toList();
+      for (var comment in blogComments) {
+        await _storageService.deleteComment(comment.id);
+      }
+
+      // Remove the blog
+      blogs.removeAt(blogIndex);
+      await _storageService.saveBlogs(blogs);
+      
+      print('BlogService: Blog and associated comments deleted successfully'); // Debug log
       return true;
     } catch (e) {
-      print('Error deleting blog: $e');
+      print('BlogService: Error deleting blog: $e'); // Debug log
+      return false;
+    }
+  }
+
+  Future<bool> deleteComment(String blogId, String commentId, String userId) async {
+    try {
+      print('BlogService: Attempting to delete comment $commentId by user $userId'); // Debug log
+      
+      // Get all comments
+      final comments = await _storageService.getComments();
+      final commentIndex = comments.indexWhere((comment) => comment.id == commentId);
+      
+      if (commentIndex == -1) {
+        print('BlogService: Comment not found in comments list'); // Debug log
+        return false;
+      }
+
+      // Check if the user is the author of the comment
+      if (comments[commentIndex].userId != userId) {
+        print('BlogService: User is not the comment author'); // Debug log
+        return false;
+      }
+
+      // Remove the comment from the comments list
+      comments.removeAt(commentIndex);
+      
+      // Update the comments in storage
+      await _storageService.saveComments(comments);
+      
+      print('BlogService: Comment deleted successfully'); // Debug log
+      return true;
+    } catch (e) {
+      print('BlogService: Error deleting comment: $e'); // Debug log
       return false;
     }
   }

@@ -1,3 +1,5 @@
+import 'comment.dart';
+
 class Blog {
   final String id;
   final String title;
@@ -9,6 +11,7 @@ class Blog {
   final DateTime updatedAt;
   final List<String> likes;
   final List<String> dislikes;
+  final List<Comment> comments;
 
   Blog({
     required this.id,
@@ -21,8 +24,10 @@ class Blog {
     required this.updatedAt,
     List<String>? likes,
     List<String>? dislikes,
+    List<Comment>? comments,
   }) : likes = likes ?? [],
-       dislikes = dislikes ?? [];
+       dislikes = dislikes ?? [],
+       comments = comments ?? [];
 
   Blog copyWith({
     String? id,
@@ -35,6 +40,7 @@ class Blog {
     DateTime? updatedAt,
     List<String>? likes,
     List<String>? dislikes,
+    List<Comment>? comments,
   }) {
     return Blog(
       id: id ?? this.id,
@@ -47,6 +53,7 @@ class Blog {
       updatedAt: updatedAt ?? this.updatedAt,
       likes: likes ?? this.likes,
       dislikes: dislikes ?? this.dislikes,
+      comments: comments ?? this.comments,
     );
   }
 
@@ -62,6 +69,7 @@ class Blog {
       'updatedAt': updatedAt.toIso8601String(),
       'likes': likes,
       'dislikes': dislikes,
+      'comments': comments.map((comment) => comment.toJson()).toList(),
     };
   }
 
@@ -77,6 +85,9 @@ class Blog {
       updatedAt: DateTime.tryParse(json['updatedAt']?.toString() ?? '') ?? DateTime.now(),
       likes: List<String>.from(json['likes'] ?? []),
       dislikes: List<String>.from(json['dislikes'] ?? []),
+      comments: (json['comments'] as List<dynamic>?)
+          ?.map((comment) => Comment.fromJson(comment))
+          .toList() ?? [],
     );
   }
 } 

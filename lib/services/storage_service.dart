@@ -161,4 +161,35 @@ class StorageService {
     final comments = await getComments();
     return comments.where((comment) => comment.blogId == blogId).toList();
   }
+
+  Future<void> saveBlogs(List<Blog> blogs) async {
+    try {
+      final blogJsonList = blogs.map((blog) => jsonEncode(blog.toJson())).toList();
+      await _prefs.setStringList('blogs', blogJsonList);
+    } catch (e) {
+      print('Error saving blogs: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> saveComments(List<Comment> comments) async {
+    try {
+      final commentJsonList = comments.map((comment) => jsonEncode(comment.toJson())).toList();
+      await _prefs.setStringList(_commentsKey, commentJsonList);
+    } catch (e) {
+      print('Error saving comments: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> deleteComment(String commentId) async {
+    try {
+      final comments = await getComments();
+      comments.removeWhere((comment) => comment.id == commentId);
+      await saveComments(comments);
+    } catch (e) {
+      print('Error deleting comment: $e');
+      rethrow;
+    }
+  }
 } 
